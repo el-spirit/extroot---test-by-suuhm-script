@@ -72,6 +72,9 @@ fi
 TOTAL_RAM=$(awk '/MemTotal/ {print $2}' /proc/meminfo)   # в KB
 ZRAM_SIZE=$(( TOTAL_RAM * ZRAM_SIZE_PERCENT / 100 * 1024 )) # в байтах
 
+swapoff /dev/zram0
+echo 0 > /sys/block/zram0/reset
+
 # Настраиваем размер
 echo "$ZRAM_SIZE" > /sys/block/zram0/disksize
 
