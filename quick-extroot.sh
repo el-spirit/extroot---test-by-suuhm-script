@@ -17,7 +17,7 @@ function _set_xedroot() {
         #start checks and opkg update / installs
         echo;echo "[*] Install dependencies:"
         opkg update
-        opkg install block-mount kmod-fs-ext4 kmod-usb-storage kmod-usb-ohci kmod-usb-uhci e2fsprogs fdisk fdisk-util libustream-mbedtls 
+        opkg install  fdisk libustream-mbedtls block-mount kmod-fs-ext4 kmod-usb-storage kmod-usb-ohci kmod-usb-uhci e2fsprogs 
 
         if [ $? -ne 0 ]; then
                 logger -t quick-extroot-owrt.sh "ERROR! Something with opkg went wrong, exit."
