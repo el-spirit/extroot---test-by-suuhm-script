@@ -1,14 +1,16 @@
 #!/bin/sh
 #
 # --------------------------------
-# openwrt : quick-extroot v0.2a fixed
+# openwrt : quick-extroot v0.2a full fix
 # -------------------------------
 # (c) 2021 suuhm, adapted 2025
 #
 
 __DEV="/dev/sda"
 
+# -----------------------
 # Проверка устройства
+# -----------------------
 _check_device() {
     if [ -b "$1" ]; then
         echo "[*] Device $1 found"
@@ -19,7 +21,9 @@ _check_device() {
     fi
 }
 
+# -----------------------
 # Создание extroot
+# -----------------------
 _set_xedroot() {
     echo "[*] Installing dependencies..."
     opkg update
@@ -96,37 +100,109 @@ _set_xedroot() {
     uci set fstab.overlay.options="rw,noatime,data=writeback"
     uci commit fstab
 
-    echo "[*] Extroot setup complete. Reboot required!"
+    echo "[*] Extroot setup complete."
     echo "*****************************************"
-    sleep 3
-    reboot
 }
 
+# -----------------------
+# Создание swap-файла
+# -----------------------
+_set_swap() {
+    if [ -z "$1" ]; then
+        FS=$(free -m | awk '/Mem:/ {print $2}')
+        NS=$(($FS / 1024 * 4))
+        echo "[*] Creating swap file of $NS MB on /usr/lib/extroot.swap"
+        dd if=/dev/zero of=/usr/lib/extroot.swap bs=1M count=$NS
+        mkswap /usr/lib/extroot.swap
+
+        uci -q delete fstab.swap
+        uci set fstab.swap="swap"
+        uci set fstab.swap.device="/usr/lib/extroot.swap"
+        uci commit fstab
+        /etc/init.d/fstab boot
+    else
+        _check_device "$1"
+        mkswap "$1"
+
+        uci -q delete fstab.swap
+        uci set fstab.swap="swap"
+        uci set fstab.swap.device="$1"
+        uci commit fstab
+        /etc/init.d/fstab boot
+    fi
+
+    echo "[*] Swap setup complete!"
+    cat /proc/swaps
+}
+
+# -----------------------
+# Перенос opkg-lists на extroot
+# -----------------------
+_set_opkg2er() {
+    sed -i -e "/^lists_dir\s/s:/var/opkg-lists$:/usr/lib/opkg/lists:" /etc/opkg.conf
+    opkg update
+    echo "[*] opkg lists redirected to extroot"
+}
+
+# -----------------------
+# Fixup extroot (переподключение)
+# -----------------------
+_fixup_extroot() {
+    if [ -z "$1" ]; then
+        echo "[*] No device specified for fixup"
+        exit 1
+    fi
+    _check_device "$1"
+
+    XTDEVICE="${1}1"
+    UUID=$(block info "$XTDEVICE" | grep -o -e "UUID=[^ ]*" | cut -d= -f2)
+    if [ -z "$UUID" ]; then
+        echo "[!!] Failed to get UUID for $XTDEVICE"
+        exit 1
+    fi
+
+    uci -q delete fstab.overlay
+    uci set fstab.overlay="mount"
+    uci set fstab.overlay.uuid="$UUID"
+    uci set fstab.overlay.target="/overlay"
+    uci set fstab.overlay.options="rw,noatime,data=writeback"
+    uci commit fstab
+
+    echo "[*] Fixup extroot complete."
+}
+
+# -----------------------
 # MAIN
+# -----------------------
 echo "_________________________________________________"
-echo "- QUICK - EXTROOT OPENWRT v0.2a fixed -"
+echo "- QUICK - EXTROOT OPENWRT v0.2a full fix -"
 echo "_________________________________________________"
 echo
 
-if [ "$1" = "--create-extroot" ]; then
-    _set_xedroot "$2"
-    exit 0
-elif [ "$1" = "--create-swap" ]; then
-    echo "[*] Swap creation not modified"
-    exit 0
-elif [ "$1" = "--set-opkg2er" ]; then
-    echo "[*] opkg2er not modified"
-    exit 0
-elif [ "$1" = "--fixup-extroot" ]; then
-    echo "[*] fixup-extroot not modified"
-    exit 0
-else
-    echo
-    echo "Usage: $0 <OPTIONS> [DEV]"
-    echo "Options:"
-    echo "  --create-extroot <dev>"
-    echo "  --create-swap <dev>"
-    echo "  --set-opkg2er"
-    echo "  --fixup-extroot <dev>"
-    exit 1
-fi
+case "$1" in
+    --create-extroot)
+        _set_xedroot "$2"
+        echo "[*] Rebooting in 5 seconds..."
+        sleep 5
+        reboot
+        ;;
+    --create-swap)
+        _set_swap "$2"
+        ;;
+    --set-opkg2er)
+        _set_opkg2er
+        ;;
+    --fixup-extroot)
+        _fixup_extroot "$2"
+        ;;
+    *)
+        echo
+        echo "Usage: $0 <OPTIONS> [DEV]"
+        echo "Options:"
+        echo "  --create-extroot <dev>"
+        echo "  --create-swap <dev or empty for auto>"
+        echo "  --set-opkg2er"
+        echo "  --fixup-extroot <dev>"
+        exit 1
+        ;;
+esac
