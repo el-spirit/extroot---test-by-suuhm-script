@@ -90,12 +90,12 @@ function _set_xedroot() {
                 if [ $? -ne 0 ]; then
                        echo;echo "[*] Create and format device: ($CH_DEV)"
                        fdisk ${CH_DEV} <<EOF
+o					   
 n
 p
 1
 
 
-Y
 w
 EOF
                 fi
