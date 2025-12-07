@@ -9,44 +9,41 @@ PASSWORD="irdiS0066"
 COUNTRY="RU"
 
 # ----------------------------
-# Интерактивный выбор типа роутера
+# Интерактивный выбор роутера
 # ----------------------------
 echo "Выберите тип роутера для настройки:"
 echo "1) R1 - основной роутер с DHCP"
 echo "2) R2 - второстепенный роутер в режиме AP"
-read -p "Введите 1 или 2: " ROUTER_CHOICE
+read -r ROUTER_CHOICE
 
-if [ "$ROUTER_CHOICE" = "1" ]; then
-    ROUTER_TYPE="R1"
-elif [ "$ROUTER_CHOICE" = "2" ]; then
-    ROUTER_TYPE="R2"
-else
-    echo "Неверный выбор! Выход..."
-    exit 1
-fi
+case "$ROUTER_CHOICE" in
+    1) ROUTER_TYPE="R1" ;;
+    2) ROUTER_TYPE="R2" ;;
+    *)
+        echo "Неверный выбор! Выход..."
+        exit 1
+        ;;
+esac
+
+echo "[*] Configuring $ROUTER_TYPE Wi-Fi..."
 
 # ----------------------------
-# Проверка пакетов wpad
+# Проверка и установка wpad
 # ----------------------------
 echo "[*] Проверяем wpad для поддержки 802.11r/k/v..."
-INSTALLED_WPAD=$(opkg list-installed | grep -E "wpad(-basic)?(-mbedtls)?(-openssl)?(-wolfssl)?|wpad-mini")
-
-if [ -n "$INSTALLED_WPAD" ]; then
-    echo "[*] Найдено установленное wpad: $INSTALLED_WPAD"
+WPAD_INSTALLED=$(opkg list-installed | grep wpad)
+if echo "$WPAD_INSTALLED" | grep -qE "wpad-basic|wpad-mini"; then
     echo "[*] Удаляем урезанные версии..."
-    opkg remove -y wpad-basic wpad-basic-mbedtls wpad-basic-openssl wpad-basic-wolfssl wpad-mini
+    opkg remove wpad-basic wpad-basic-mbedtls wpad-mini 2>/dev/null
 fi
 
 echo "[*] Устанавливаем полный wpad..."
 opkg update
-opkg install -y wpad
+opkg install wpad
 
 # ----------------------------
-# Настройка Wi-Fi
-# ----------------------------
-echo "[*] Configuring $ROUTER_TYPE Wi-Fi..."
-
 # Настройка каналов и NASID
+# ----------------------------
 if [ "$ROUTER_TYPE" = "R1" ]; then
     RADIO0_CH=1    # 2.4GHz
     RADIO1_CH=36   # 5GHz
@@ -59,7 +56,9 @@ else
     NASID_5="ChikaWiFi_5G_R2"
 fi
 
-# 2.4GHz
+# ----------------------------
+# Настройка Wi-Fi 2.4GHz
+# ----------------------------
 uci set wireless.radio0.disabled='0'
 uci set wireless.radio0.country="$COUNTRY"
 uci set wireless.radio0.channel="$RADIO0_CH"
@@ -76,7 +75,9 @@ uci set wireless.@wifi-iface[0].ieee80211k='1'
 uci set wireless.@wifi-iface[0].ieee80211v='1'
 uci set wireless.@wifi-iface[0].nasid="$NASID_24"
 
-# 5GHz
+# ----------------------------
+# Настройка Wi-Fi 5GHz
+# ----------------------------
 uci set wireless.radio1.disabled='0'
 uci set wireless.radio1.country="$COUNTRY"
 uci set wireless.radio1.channel="$RADIO1_CH"
@@ -94,7 +95,7 @@ uci set wireless.@wifi-iface[1].ieee80211v='1'
 uci set wireless.@wifi-iface[1].nasid="$NASID_5"
 
 # ----------------------------
-# Применение
+# Применение настроек
 # ----------------------------
 echo "[*] Committing Wi-Fi configuration..."
 uci commit wireless
