@@ -45,5 +45,40 @@ grep -q "^dest root /$" $OPKG_CONF || echo "dest root /" >> $OPKG_CONF
 echo "=== Обновляем список пакетов ==="
 opkg update
 
+# -----------------------------
+# OpenWrt ZRAM Setup Script
+# -----------------------------
+
+# Параметры
+ZRAM_DEVICES=1               # количество zram устройств
+ZRAM_SIZE_PERCENT=50         # размер zram в процентах от ОЗУ
+SWAP_PRIORITY=100            # приоритет swap
+SWAP_FILE=/dev/zram0
+
+# Установка пакета zram (если не установлен)
+opkg update
+opkg install kmod-zram || echo "kmod-zram уже установлен"
+
+# Отключаем текущий swap на zram (если есть)
+swapoff ${SWAP_FILE} 2>/dev/null
+echo 0 > /sys/block/zram0/reset
+
+# Определяем размер в байтах
+TOTAL_RAM=$(grep MemTotal /proc/meminfo | awk '{print $2}') # в KB
+ZRAM_SIZE=$((TOTAL_RAM * ZRAM_SIZE_PERCENT / 100 * 1024))   # перевод в байты
+
+# Настройка zram
+echo $ZRAM_SIZE > /sys/block/zram0/disksize
+
+# Форматируем под swap
+mkswap ${SWAP_FILE}
+swapon -p ${SWAP_PRIORITY} ${SWAP_FILE}
+
+# Проверка
+swapon -s
+free -h
+
+echo "ZRAM настроен: ${ZRAM_SIZE_PERCENT}% от RAM"
+
 echo "=== Скрипт завершён ==="
 echo "Файловый кэш усилен, логи в RAM, opkg скачивает пакеты в /tmp/opkg-download (RAM)"
