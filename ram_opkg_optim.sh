@@ -51,7 +51,7 @@ opkg update
 
 # --- Настройки ---
 ZRAM_DEVICES=1             # количество zram устройств
-ZRAM_SIZE_PERCENT=50       # размер zram в % от RAM
+ZRAM_SIZE_PERCENT=44       # размер zram в % от RAM
 SWAP_PRIORITY=100          # приоритет swap
 ZRAM_DEVICE="/dev/zram0"
 
@@ -72,7 +72,7 @@ fi
 TOTAL_RAM=$(awk '/MemTotal/ {print $2}' /proc/meminfo)   # в KB
 ZRAM_SIZE=$(( TOTAL_RAM * ZRAM_SIZE_PERCENT / 100 * 1024 )) # в байтах
 
-swapoff /dev/zram0
+swapoff /dev/zram0 2>/dev/null || true
 echo 0 > /sys/block/zram0/reset
 
 # Настраиваем размер
