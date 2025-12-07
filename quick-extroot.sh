@@ -116,7 +116,7 @@ EOF
 		#set first part. on disk - Настраиваем переменную для первой части
         XTDEVICE="${CH_DEV}1"
 
-        mkfs.ext4 -F -O has_journal -J size=32 -E stride=16,stripe-width=16 -L extroot ${XTDEVICE}
+        mkfs.ext4 -F -O has_journal -J size=1 -E stride=16,stripe-width=16 -L extroot ${XTDEVICE}
 		echo "[*] Partition formatted as ext4 optimized for microSD"
 
         # configure the selected partition as new overlay via fstab UCI subsystem:
