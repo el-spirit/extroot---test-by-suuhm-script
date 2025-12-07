@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # --------------------------------
-# openwrt : quick-extroot v0.2f
+# openwrt : quick-extroot v0.2g
 # -------------------------------
 # (c) 2021 suuhm
 #
@@ -327,7 +327,7 @@ function _checkfix_extroot() {
 # MAIN()
 echo "_________________________________________________"
 echo "                                                 "
-echo "- QICK - EXTROOT OPENWRT v0.2f (c) 2021 - modded -"
+echo "- QICK - EXTROOT OPENWRT v0.2g (c) 2021 - modded -"
 echo "_________________________________________________"
 echo
 
