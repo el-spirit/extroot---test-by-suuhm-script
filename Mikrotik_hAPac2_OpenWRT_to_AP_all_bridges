@@ -23,32 +23,5 @@ uci commit network
 echo "=== Перезапускаем сеть ==="
 /etc/init.d/network restart
 
-echo "=== Настраиваем Wi-Fi 2.4GHz как AP ==="
-uci set wireless.radio0.country='RU'
-uci set wireless.radio0.disabled='0'
-wifi_iface_24=$(uci add wireless wifi-iface)
-uci set wireless.$wifi_iface_24.device='radio0'
-uci set wireless.$wifi_iface_24.network='lan'
-uci set wireless.$wifi_iface_24.mode='ap'
-uci set wireless.$wifi_iface_24.ssid='ChikaWiFi'
-uci set wireless.$wifi_iface_24.encryption='psk2'
-uci set wireless.$wifi_iface_24.key='irdiS0066'
-
-echo "=== Настраиваем Wi-Fi 5GHz как AP ==="
-uci set wireless.radio1.country='RU'
-uci set wireless.radio1.disabled='0'
-wifi_iface_5=$(uci add wireless wifi-iface)
-uci set wireless.$wifi_iface_5.device='radio1'
-uci set wireless.$wifi_iface_5.network='lan'
-uci set wireless.$wifi_iface_5.mode='ap'
-uci set wireless.$wifi_iface_5.ssid='ChikaWifiGold'
-uci set wireless.$wifi_iface_5.encryption='psk2'
-uci set wireless.$wifi_iface_5.key='irdiS0066'
-
-uci commit wireless
-
-echo "=== Перезапускаем Wi-Fi ==="
-wifi reload
-
 echo "=== Настройка завершена! ==="
 echo "IP роутера: 172.16.0.10"
