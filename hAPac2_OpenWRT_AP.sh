@@ -20,6 +20,12 @@ uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='172.16.0.1'       # шлюз
 uci set network.lan.dns='172.16.0.1'     # DNS-сервер
 uci set network.@device[0].ports='lan1 lan2 lan3 lan4 wan'
+
+echo "=== IPv6 passthrough ==="
+uci set network.lan.ip6assign='64'   # размер префикса для RA (64)
+uci set network.lan.ip6hint='10'     # необязательно, помогает выбирать подпрефикс
+uci set network.lan.delegate='1'     # разрешаем RA для клиентов
+
 uci commit network
 
 echo "=== Перезапускаем сеть ==="
