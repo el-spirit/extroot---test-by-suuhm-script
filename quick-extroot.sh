@@ -310,8 +310,8 @@ function _checkfix_extroot() {
                 exit 1;
         fi
         
-        sleep 3
-        #reboot
+        sleep 5
+        reboot
         logger -t quick-extroot-owrt.sh "Done $(date)"
         echo
         echo;echo "*****************************************"
