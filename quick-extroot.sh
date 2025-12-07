@@ -80,15 +80,16 @@ function _set_xedroot() {
                 CH_DEV=$__DEV
         fi
 
-				echo
-				echo "[*] Create a fresh partition on $CH_DEV"
+				echo;echo "[*] Create a fresh partition on $CH_DEV"
 
 				echo "[*]Удаляем старую таблицу разделов и начало диска — 1 МБ"
+				echo
 				
 				dd if=/dev/zero of="$CH_DEV" bs=512 count=2048 conv=fsync
+				
 				echo "[*] Old partitions wiped"
-
 				echo "[*] Проверяем наличие /dev/sdX1"
+				
 				fdisk -l | grep -q "${CH_DEV}1"
 
 				if [ $? -ne 0 ]; then
