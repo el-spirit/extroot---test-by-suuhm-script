@@ -80,17 +80,21 @@ function _set_xedroot() {
                 CH_DEV=$__DEV
         fi
 
-				echo; echo "[*] Create a fresh partition on $CH_DEV"
-				# Удаляем старую таблицу разделов и создаем новую MBR
-				dd if=/dev/zero of=$CH_DEV bs=512 count=2048 conv=fsync
+				echo
+				echo "[*] Create a fresh partition on $CH_DEV"
+
+				# Удаляем старую таблицу разделов и начало диска — 1 МБ
+				dd if=/dev/zero of="$CH_DEV" bs=512 count=2048 conv=fsync
 				echo "[*] Old partitions wiped"
-		
-                fdisk -l | grep -e ${CH_DEV}1
-                
-                if [ $? -ne 0 ]; then
-                       echo;echo "[*] Create and format device: ($CH_DEV)"
-                       fdisk ${CH_DEV} <<EOF
-o					   
+
+				# Проверяем наличие /dev/sdX1
+				fdisk -l | grep -q "${CH_DEV}1"
+
+				if [ $? -ne 0 ]; then
+				    echo
+				    echo "[*] Create and format device: ($CH_DEV)"
+				    fdisk "$CH_DEV" << EOF
+o
 n
 p
 1
@@ -98,7 +102,8 @@ p
 
 w
 EOF
-                fi
+				fi
+
 
         echo "--------------------- LIST OF DEVICES ---------------------"
         block info | grep -e sd | awk '{print "USB Devicename: " $1 " ---- UUID: " $2}'
