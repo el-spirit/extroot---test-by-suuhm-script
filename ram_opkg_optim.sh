@@ -57,7 +57,7 @@ ZRAM_DEVICE="/dev/zram0"
 
 echo "[*] Обновляем пакеты..."
 opkg update
-opkg install kmod-zram || echo "[*] kmod-zram уже установлен"
+opkg install kmod-zram zram-swap || echo "[*] kmod-zram уже установлен"
 
 # --- Настройка ZRAM ---
 echo "[*] Настраиваем ZRAM..."
